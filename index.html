@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sistema Inteligente de Predicción y Control de Tráfico – Carrera 33, Bucaramanga</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&display=swap">
+<style>
+:root{--bg:#f2f5f7;--surface:#fff;--ink:#12263a;--muted:#4d6073;--line:#d3dde5;--teal:#0e7c86;--teal-ink:#fff;--ok:#2e9e5b;--mid:#e0a100;--bad:#d64545;--soft:#e4f1f2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1a26;--surface:#142636;--ink:#e8eff5;--muted:#9fb3c4;--line:#27415a;--teal:#4cc2cc;--teal-ink:#08222a;--ok:#4cc582;--mid:#f0b92e;--bad:#ef6f6f;--soft:#12353d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1a26;--surface:#142636;--ink:#e8eff5;--muted:#9fb3c4;--line:#27415a;--teal:#4cc2cc;--teal-ink:#08222a;--ok:#4cc582;--mid:#f0b92e;--bad:#ef6f6f;--soft:#12353d;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 "Atkinson Hyperlegible",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;line-height:1.12;margin:0 0 .5em;letter-spacing:-.01em}
+h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800}
+h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:800}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0 0 1em;max-width:68ch}
+a{color:var(--teal)}
+:focus-visible{outline:3px solid var(--mid);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:18px;align-items:center;overflow-x:auto;padding-top:12px;padding-bottom:12px;white-space:nowrap}
+nav b{font-family:"Bricolage Grotesque",sans-serif;margin-right:auto}
+nav a{text-decoration:none;color:var(--muted);font-size:.95rem}
+nav a:hover{color:var(--ink)}
+section{padding:56px 0}
+.hero{padding-top:44px}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}@media(max-width:860px){.hero-grid{grid-template-columns:1fr}}
+.hero h1{font-size:clamp(1.8rem,3.4vw,2.6rem)}.hero-map{margin-top:0;padding:10px}
+.lead{font-size:1.2rem;color:var(--muted)}
+.badge{display:inline-block;background:var(--soft);color:var(--teal);padding:3px 12px;border-radius:99px;font-size:.9rem;font-weight:700;margin-bottom:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;margin-top:26px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.item{border-top:3px solid var(--teal);padding-top:12px}
+.item p{color:var(--muted);margin:0}
+/* simulator */
+.sim{display:grid;grid-template-columns:1.5fr 1fr;gap:26px}
+@media(max-width:760px){.sim{grid-template-columns:1fr}}
+.road{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.seg{display:grid;grid-template-columns:96px 1fr 74px;align-items:center;gap:10px;font-size:.95rem}
+.bar{height:22px;border-radius:6px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px;transition:width .35s,background .35s}
+.seg span:last-child{text-align:right;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--teal);height:32px}
+.hour{font:800 2.2rem "Bricolage Grotesque",sans-serif}
+.stat{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0}
+.stat b{font-size:1.15rem}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:700;font-size:.9rem;color:#fff}
+.note{font-size:.9rem;color:var(--muted)}
+.route{background:var(--soft);border-radius:10px;padding:12px 14px;margin-top:14px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:8px}.kpis div{background:var(--surface);padding:14px 16px}.kpis b{display:block;font:800 1.7rem "Bricolage Grotesque",sans-serif;color:var(--teal)}.kpis span{font-size:.9rem;color:var(--muted)}
+#mapbox .legend{margin-top:10px}
+#mapbox{position:relative}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:8px;font-size:.92rem}.ctl label{display:flex;align-items:center;gap:6px;cursor:pointer}.ctl input{accent-color:var(--teal);width:16px;height:16px}
+.btn{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 12px;min-height:38px;cursor:pointer}.btn.pri{background:var(--teal);color:var(--teal-ink);border-color:var(--teal);font-weight:700}.btn:disabled{opacity:.5;cursor:not-allowed}
+.fld{display:grid;gap:12px;grid-template-columns:1fr 2fr}@media(max-width:640px){.fld{grid-template-columns:1fr}}
+select,textarea{font:inherit;width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}label.l{display:block;font-weight:700;margin-bottom:4px}.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tip{position:absolute;display:none;pointer-events:none;z-index:3;background:var(--ink);color:var(--bg);padding:8px 12px;border-radius:8px;font-size:.9rem;line-height:1.4;max-width:220px}
+/* alerts */
+.alerts{list-style:none;margin:0;padding:0}
+.alerts li{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.alerts li:last-child{border:0}
+.alerts .tag{align-self:start;min-width:84px;text-align:center}
+.alerts p{margin:0;color:var(--muted)}
+.cause{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);margin-bottom:12px}
+.cause>div{padding:16px}
+.cause>div:first-child{background:var(--soft)}
+.cause p{margin:0}
+@media(max-width:640px){.cause{grid-template-columns:1fr}}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.flow div{flex:1 1 170px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.flow div p{margin:0;color:var(--muted);font-size:.95rem}
+ul.clean{padding-left:1.2em;margin:0}
+ul.clean li{margin-bottom:.5em;max-width:70ch}
+footer{background:var(--ink);color:var(--bg);padding:36px 0;font-size:.95rem}
+footer a{color:inherit}
+footer p{max-width:80ch}
+button.theme{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:4px 10px;font:inherit;cursor:pointer}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.fld2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rc{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;cursor:pointer}
+.rc[aria-pressed=true]{border-color:var(--teal);background:var(--soft)}.rc small{display:block;color:var(--muted)}.best{font-weight:700;color:var(--ok)}
+#rsteps{margin:10px 0 0;padding-left:1.3em;color:var(--muted)}#routes{margin-top:18px}
+details.f{border-bottom:1px solid var(--line);padding:12px 0}details.f summary{cursor:pointer;font-weight:700}details.f p{margin:8px 0 0;color:var(--muted)}
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:6;background:var(--teal);color:var(--teal-ink);font-weight:700;text-decoration:none;padding:12px 18px;border-radius:99px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+<nav aria-label="Principal"><div class="wrap">
+<b>Carrera 33 · Tráfico inteligente</b>
+<a href="#prediccion">Mapa y rutas</a><a href="#avisos">Avisos</a><a href="#reportar">Reportar</a><a href="#proyecto">Proyecto</a><a href="#mapa">Tráfico Carrera 33</a><a href="#como">Cómo funciona</a><a href="#privacidad">Privacidad</a><a href="#ayuda">Ayuda</a>
+</div></nav>
+
+<!-- ===== HERRAMIENTA PRINCIPAL: se usa desde que se abre la página ===== -->
+<section id="prediccion" style="padding-top:20px"><div class="wrap">
+<h2>¿Cómo estará la Carrera 33 a esta hora?</h2>
+<p>Empieza aquí: <strong>1)</strong> ajusta la hora, <strong>2)</strong> elige tu origen y destino, <strong>3)</strong> compara las rutas y toca la que prefieras. Si necesitas apoyo, usa el botón Ayuda.</p>
+<div class="panel sim">
+<div>
+<div class="hour" id="hlabel" aria-live="polite">7:00 a. m.</div>
+<label for="h" class="note">Hora del día</label>
+<input id="h" type="range" min="5" max="22" step="0.5" value="7">
+<div id="mapbox"></div>
+<h3 style="margin-top:22px">Estado por tramo</h3>
+<div class="road" id="road" role="list" aria-label="Estado por tramo"></div>
+<div class="legend"><span><i style="background:var(--ok)"></i>Fluido</span><span><i style="background:var(--mid)"></i>Lento</span><span><i style="background:var(--bad)"></i>Congestionado</span></div>
+</div>
+<div>
+<h3>Resumen del recorrido completo</h3>
+<div class="stat"><span>Estado general</span><span id="state" class="tag">–</span></div>
+<div class="stat"><span>Tiempo estimado</span><b id="eta">–</b></div>
+<div class="stat"><span>Tiempo sin tráfico</span><b>14 min</b></div>
+<div class="stat"><span>Velocidad promedio</span><b id="spd">–</b></div>
+<div id="routes"></div>
+<div class="route" id="route" aria-live="polite"></div>
+<p class="note" style="margin-top:14px">Datos de demostración. En el sistema real, las cifras provienen de sensores IoT instalados en la vía.</p>
+</div>
+</div></div></section>
+
+<header class="wrap hero" id="proyecto">
+<div class="hero-grid"><div>
+<span class="badge">Prototipo académico · Bucaramanga</span>
+<h1>Sistema Inteligente de Predicción y Control de Tráfico – Carrera 33 (Bucaramanga)</h1>
+<p class="lead"><strong>Objetivo:</strong> proveer una plataforma web interactiva que permita predecir el flujo vehicular, anticipar momentos de congestión en horas pico y sugerir rutas alternas para mejorar la movilidad en la Carrera 33.</p>
+<p>Pensada para conductores, motociclistas, peatones, usuarios de Metrolínea, comerciantes y ciudadanos en general. Se apoya en el framework conceptual para el control vehicular basado en internet de las cosas (Edward y Sandoval, 2019), de la Universidad Autónoma de Bucaramanga.</p></div>
+<!-- ===== INICIO SECCIÓN MAPA (Google Maps) ===== -->
+<div id="mapa" class="panel hero-map"><a href="https://www.google.com/maps/search/?api=1&amp;query=Carrera+33+Bucaramanga+Colombia" target="_blank" rel="noopener" aria-label="Abrir la Carrera 33 en Google Maps" style="display:block"><svg viewBox="0 0 400 240" role="img" aria-label="Vista previa esquemática de la Carrera 33" style="width:100%;height:auto;display:block;border-radius:10px;background:var(--soft)"><g style="fill:var(--line);opacity:.7"><rect x="20" y="20" width="90" height="50" rx="5"/><rect x="130" y="15" width="80" height="45" rx="5"/><rect x="250" y="140" width="110" height="60" rx="5"/><rect x="30" y="130" width="90" height="45" rx="5"/><rect x="300" y="100" width="80" height="30" rx="5"/></g><polyline points="30,200 150,140 260,90 375,40" fill="none" style="stroke:var(--surface);stroke-width:22;stroke-linecap:round;stroke-linejoin:round"/><line x1="30" y1="200" x2="150" y2="140" style="stroke:var(--ok);stroke-width:12;stroke-linecap:round"/><line x1="150" y1="140" x2="260" y2="90" style="stroke:var(--mid);stroke-width:12"/><line x1="260" y1="90" x2="375" y2="40" style="stroke:var(--bad);stroke-width:12;stroke-linecap:round"/><text x="170" y="112" transform="rotate(-24 170 112)" style="fill:var(--ink);font:700 14px sans-serif">Carrera 33</text><circle cx="205" cy="115" r="9" style="fill:var(--teal);stroke:#fff;stroke-width:3"/></svg></a>
+<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">Mostrar el mapa incrustado de Google Maps</summary><iframe title="Mapa de la Carrera 33 en Bucaramanga, Google Maps" src="https://www.google.com/maps?q=Carrera+33,+Bucaramanga,+Colombia&amp;z=15&amp;output=embed" width="100%" height="340" style="border:0;border-radius:10px;display:block;max-width:100%;margin-top:10px" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></details>
+<p style="margin:12px 0 0"><a class="btn pri" style="display:inline-block;text-decoration:none;font-size:1.05rem;padding:12px 22px;min-height:48px;max-width:100%" href="https://www.google.com/maps/search/?api=1&amp;query=Carrera+33+Bucaramanga+Colombia" target="_blank" rel="noopener">Abrir en Google Maps (Ver Tráfico En Vivo)</a></p>
+<p class="note" style="margin:8px 0 0">Toca el mapa o el botón para abrir Google Maps. Para el tráfico en vivo, activa la capa «Tráfico».</p></div>
+<!-- ===== FIN SECCIÓN MAPA ===== -->
+</div>
+</header>
+<div class="wrap"><div class="kpis"><div><b>6</b><span>tramos monitoreados</span></div><div><b>7</b><span>puntos con sensor IoT</span></div><div><b>5 min</b><span>actualización de datos</span></div><div><b>24/7</b><span>consulta sin registro</span></div></div></div>
+
+
+
+<section id="avisos" style="padding-top:10px"><div class="wrap">
+<h2>Avisos sobre obras y accidentes</h2>
+<p>Reportes verificados por la autoridad de tránsito, ordenados del más reciente al más antiguo.</p>
+<div class="panel"><ul class="alerts">
+<li><span class="tag" style="background:var(--bad)">Accidente</span><div><h3>Choque leve entre dos vehículos</h3><p>Un carril bloqueado en sentido norte–sur. Tiempo estimado de despeje: 25 minutos. <em>Hace 10 min</em></p></div></li>
+<li><span class="tag" style="background:#8a5a00">Obra vial</span><div><h3>Reparcheo de pavimento</h3><p>Cierre parcial de carril entre las 9:00 a. m. y las 3:00 p. m. Se recomienda usar la ruta alterna. <em>Programada hoy</em></p></div></li>
+<li><span class="tag" style="background:var(--teal);color:var(--teal-ink)">Semáforos</span><div><h3>Ajuste de tiempos en intersección</h3><p>Se está calibrando la sincronización de dos semáforos. Es posible que haya demoras breves. <em>Esta semana</em></p></div></li>
+</ul>
+<p class="note" style="margin:14px 0 0">Avisos de ejemplo para el prototipo. ¿Viste un incidente? El botón «Reportar» permitirá enviarlo sin crear cuenta.</p></div>
+</div></section>
+
+<section id="reportar" style="padding-top:10px"><div class="wrap"><h2>Reporta un problema en la Carrera 33</h2><p>Elige el tipo de problema, marca el punto en el mapa y envía tu reporte. No necesitas crear cuenta ni dar datos personales.</p>
+<div class="panel"><div class="fld"><div><label class="l" for="rt">Tipo de problema</label><select id="rt"><option>Accidente</option><option>Hueco en la vía</option><option>Semáforo dañado</option><option>Obra sin señalizar</option></select></div><div><label class="l" for="rd">Descripción (opcional)</label><textarea id="rd" rows="2" maxlength="200" placeholder="Ej.: semáforo intermitente en el cruce"></textarea></div></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button class="btn" id="rp">Marcar en el mapa</button><button class="btn" id="rc">Usar el centro del mapa</button><button class="btn pri" id="rs" disabled>Enviar reporte</button></div><p class="note" id="rm" role="status" style="margin:12px 0 0"></p></div>
+<h3 style="margin-top:26px">Reportes ciudadanos</h3><div class="panel" style="margin-top:8px"><ul class="alerts" id="rl"><li id="re" style="display:block"><p>Aún no hay reportes. Cuando envíes uno, aparecerá aquí y en el mapa.</p></li></ul><p class="note" style="margin:12px 0 0">Prototipo: los reportes se guardan solo mientras la página está abierta. En el sistema real llegarían a la autoridad de tránsito para su verificación.</p></div></div></section>
+
+<section id="causas" style="padding-top:10px"><div class="wrap">
+<h2>Qué problemas atiende y cómo</h2>
+<div class="cause"><div><h3>Exceso de vehículos en horas pico</h3></div><div><p>Predice los momentos de mayor flujo y avisa con anticipación para que cada persona elija cuándo y por dónde salir.</p></div></div>
+<div class="cause"><div><h3>Semáforos desincronizados</h3></div><div><p>Mide los tiempos de espera en cada cruce y entrega datos para que la autoridad de tránsito ajuste la sincronización.</p></div></div>
+<div class="cause"><div><h3>Obras viales</h3></div><div><p>Publica cierres y horarios en un solo lugar y recalcula la ruta recomendada.</p></div></div>
+<div class="cause"><div><h3>Accidentes recurrentes</h3></div><div><p>Detecta paradas anormales de flujo, emite alertas y muestra los puntos con más incidentes para priorizar acciones preventivas.</p></div></div>
+</div></section>
+
+<section style="padding-top:10px"><div class="wrap">
+<h2>Para quién es</h2>
+<div class="grid">
+<div class="item"><h3>Conductores y motociclistas</h3><p>Hora ideal de salida, tiempo estimado y ruta alterna.</p></div>
+<div class="item"><h3>Peatones</h3><p>Avisos de obras y zonas con alto flujo para caminar con más seguridad.</p></div>
+<div class="item"><h3>Usuarios de Metrolínea</h3><p>Estimación de demoras para planear el viaje en bus.</p></div>
+<div class="item"><h3>Comerciantes</h3><p>Anticipan horas de congestión que afectan la llegada de clientes y la carga y descarga.</p></div>
+<div class="item"><h3>Ciudadanía en general</h3><p>Información clara, sin tecnicismos y sin necesidad de registrarse.</p></div>
+</div></div></section>
+
+<section id="como" style="padding-top:10px"><div class="wrap">
+<h2>Cómo funciona</h2>
+<p>El sistema sigue la lógica del framework de Edward y Sandoval (2019): captar datos en la vía, procesarlos y entregarlos a las personas.</p>
+<div class="flow">
+<div><h3>1. Captura</h3><p>Sensores IoT en puntos clave de la Carrera 33 cuentan vehículos y miden velocidad.</p></div>
+<div><h3>2. Transmisión</h3><p>Los datos viajan por red a una plataforma central.</p></div>
+<div><h3>3. Análisis</h3><p>Se comparan con el historial por hora y día para predecir congestión.</p></div>
+<div><h3>4. Aviso</h3><p>Esta página muestra el mapa, los tiempos y las alertas.</p></div>
+</div></div></section>
+
+<section id="privacidad" style="padding-top:10px"><div class="wrap">
+<h2>Privacidad y ética</h2>
+<div class="panel" style="margin-top:0"><ul class="clean">
+<li><strong>Datos anónimos:</strong> se usan conteos y velocidades agregadas. No se guarda quién eres ni a dónde vas.</li>
+<li><strong>Ubicación bajo tu control:</strong> la página funciona sin ubicación. Si la activas para ver tu zona, es opcional y puedes retirarla cuando quieras.</li>
+<li><strong>Transparencia:</strong> indicamos de dónde viene cada dato, su hora de actualización y cuándo una cifra es una estimación.</li>
+<li><strong>Cumplimiento normativo:</strong> el tratamiento de datos se rige por la Ley 1581 de 2012 y el Decreto 1377 de 2013 (protección de datos personales en Colombia), con aviso de privacidad y canal para consultas y reclamos.</li>
+<li><strong>Mínimo necesario y seguridad:</strong> solo se recoge lo indispensable, con acceso restringido y conservación limitada.</li>
+<li><strong>Uso justo:</strong> los datos sirven para mejorar la movilidad, no para vigilar ni sancionar personas.</li>
+</ul></div>
+</div></section>
+
+<!-- ===== INICIO AYUDA ===== -->
+<section id="ayuda" style="padding-top:10px"><div class="wrap"><h2>Ayuda y preguntas frecuentes</h2><div class="panel" style="margin-top:0">
+<details class="f"><summary>¿Cómo leo los colores del mapa?</summary><p>Verde indica tráfico fluido, amarillo lento y rojo congestionado. Cada tramo también muestra su estado en texto, en la lista «Estado por tramo».</p></details>
+<details class="f"><summary>¿Cómo elijo una ruta alterna?</summary><p>En «Planifica tu recorrido» escoge tu origen y destino. Verás tres opciones con su tiempo estimado. Toca una tarjeta o la línea en el mapa para ver los pasos. La recomendada es la más rápida a esa hora.</p></details>
+<details class="f"><summary>¿Los datos son en tiempo real?</summary><p>En este prototipo son simulados. En el sistema real vendrían de sensores IoT en la vía, actualizados cada pocos minutos, con la hora de la última lectura visible.</p></details>
+<details class="f"><summary>¿Cómo veo el tráfico en vivo hoy?</summary><p>Usa el botón «Abrir en Google Maps (Ver Tráfico En Vivo)» y activa la capa «Tráfico».</p></details>
+<details class="f"><summary>¿Cómo reporto un accidente, un hueco o un semáforo dañado?</summary><p>Ve a «Reportar», elige el tipo, marca el punto en el mapa y envía. No necesitas cuenta.</p></details>
+<details class="f"><summary>¿Guardan mi ubicación?</summary><p>No. La página funciona sin ubicación y solo usa datos anónimos y agregados. Revisa la sección «Privacidad».</p></details>
+<details class="f" style="border:0"><summary>¿Con quién hablo si tengo otra duda?</summary><p>En el prototipo no hay un canal real. En el sistema final se indicaría el contacto de la autoridad de tránsito de Bucaramanga.</p></details>
+</div></div></section>
+<!-- ===== FIN AYUDA ===== -->
+<a class="fab" href="#ayuda" aria-label="Ir a la ayuda">? Ayuda</a>
+<footer><div class="wrap">
+<p><strong>Proyecto integrador académico.</strong> Prototipo con datos simulados.</p>
+<p>Fuente: Edward, J., y Sandoval, A. (2019). <em>Framework conceptual para el control vehicular en el municipio de Bucaramanga basado en internet de las cosas.</em> Universidad Autónoma de Bucaramanga. <a href="https://repository.unab.edu.co/server/api/core/bitstream">repository.unab.edu.co</a></p>
+</div></footer>
+
+<script>
+(function(){
+var segs=[["Cl. 30 – 36",.8],["Cl. 36 – 41",1],["Cl. 41 – 45",1.1],["Cl. 45 – 50",.9],["Cl. 50 – 54",.7],["Cl. 54 – 60",.85]];
+function base(h){function g(c,w,a){return a*Math.exp(-Math.pow((h-c)/w,2))}
+return Math.min(1,.12+g(7.3,.9,.7)+g(13,.8,.45)+g(18.2,1.1,.8))}
+function col(v){return v<.35?"var(--ok)":v<.65?"var(--mid)":"var(--bad)"}
+function lab(v){return v<.35?"Fluido":v<.65?"Lento":"Congestionado"}
+function fmt(h){var H=Math.floor(h),m=h%1?"30":"00",s=H>=12?"p. m.":"a. m.",x=H%12||12;return x+":"+m+" "+s}
+var road=document.getElementById("road"),rows=[];
+segs.forEach(function(s){var d=document.createElement("div");d.className="seg";d.setAttribute("role","listitem");
+d.innerHTML='<span>'+s[0]+'</span><span class="bar"><i></i></span><span></span>';road.appendChild(d);rows.push(d)});
+var NS="http://www.w3.org/2000/svg",lines=[],alt;
+function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+(function(){var P=[[80,390],[190,335],[300,285],[420,235],[540,185],[650,140],[740,110]],cl=[30,36,41,45,50,54,60],mb=document.getElementById("mapbox");
+var svg=el("svg",{viewBox:"0 0 800 480",role:"img","aria-label":"Esquema de la Carrera 33 con el estado de cada tramo, sensores, avisos y ruta alterna",style:"width:100%;height:auto;display:block;background:var(--bg);border:1px solid var(--line);border-radius:12px"});
+var u=[.894,-.447],pp=[.447,.894];
+P.forEach(function(p,i){el("line",{x1:p[0]-60*pp[0],y1:p[1]-60*pp[1],x2:p[0]+60*pp[0],y2:p[1]+60*pp[1],style:"stroke:var(--line);stroke-width:3"},svg);
+var t=el("text",{x:p[0]+66*pp[0],y:p[1]+74*pp[1],"text-anchor":"middle",style:"fill:var(--muted);font:12px sans-serif"},svg);t.textContent="Cl. "+cl[i]});
+alt=el("g",{style:"transition:opacity .35s"},svg);
+el("polyline",{points:"50,300 160,245 270,195 390,145 510,95 620,50 710,20",fill:"none",style:"stroke:var(--teal);stroke-width:5;stroke-dasharray:12 8;stroke-linecap:round"},alt);
+var at=el("text",{x:300,y:168,transform:"rotate(-26 300 168)",style:"fill:var(--teal);font:700 13px sans-serif"},alt);at.textContent="Ruta alterna";
+el("polyline",{points:P.join(" "),fill:"none",style:"stroke:var(--line);stroke-width:19;stroke-linejoin:round;stroke-linecap:round"},svg);
+for(var i=0;i<6;i++)lines.push(el("line",{x1:P[i][0],y1:P[i][1],x2:P[i+1][0],y2:P[i+1][1],style:"stroke:var(--ok);stroke-width:12;transition:stroke .35s"},svg));
+var rt=el("text",{x:455,y:200,transform:"rotate(-22.6 455 200)",style:"fill:var(--ink);font:700 14px sans-serif"},svg);rt.textContent="Carrera 33";
+P.forEach(function(p){el("circle",{cx:p[0],cy:p[1],r:6,style:"fill:var(--surface);stroke:var(--teal);stroke-width:3"},svg)});
+var m1=[(P[2][0]+P[3][0])/2,(P[2][1]+P[3][1])/2],m2=[(P[4][0]+P[5][0])/2,(P[4][1]+P[5][1])/2];
+el("circle",{cx:m1[0],cy:m1[1],r:13,style:"fill:var(--bad);stroke:#fff;stroke-width:2"},svg);
+var x=el("text",{x:m1[0],y:m1[1]+5,"text-anchor":"middle",style:"fill:#fff;font:800 15px sans-serif"},svg);x.textContent="!";
+el("rect",{x:m2[0]-11,y:m2[1]-11,width:22,height:22,rx:3,transform:"rotate(45 "+m2[0]+" "+m2[1]+")",style:"fill:#8a5a00;stroke:#fff;stroke-width:2"},svg);
+var y=el("text",{x:m2[0],y:m2[1]+5,"text-anchor":"middle",style:"fill:#fff;font:800 14px sans-serif"},svg);y.textContent="×";
+var bg=el("g",{}),rot=el("g",{transform:"rotate(-24 400 240)"},bg);
+for(var bx=-300;bx<1100;bx+=58)for(var by=-300;by<800;by+=46)el("rect",{x:bx,y:by,width:48,height:36,rx:4,style:"fill:var(--line);opacity:.5"},rot);
+el("rect",{x:560,y:300,width:130,height:80,rx:14,style:"fill:var(--ok);opacity:.3"},bg);
+el("rect",{x:110,y:90,width:120,height:70,rx:14,style:"fill:var(--ok);opacity:.3"},bg);
+[[625,345],[170,130]].forEach(function(c){var t=el("text",{x:c[0],y:c[1],"text-anchor":"middle",style:"fill:var(--muted);font:11px sans-serif"},bg);t.textContent="Zona verde"});
+el("path",{d:"M0,170 C140,200 230,120 380,150 S620,260 800,200",fill:"none",style:"stroke:var(--teal);opacity:.3;stroke-width:9;stroke-linecap:round"},bg);
+var qt=el("text",{x:250,y:128,style:"fill:var(--muted);font:italic 11px sans-serif"},bg);qt.textContent="Quebrada";
+el("polyline",{points:P.join(" "),fill:"none",style:"stroke:var(--bg);stroke-width:46;stroke-linejoin:round;stroke-linecap:round"},bg);
+svg.insertBefore(bg,svg.firstChild);svg.style.overflow="hidden";
+var cp=el("g",{},svg);el("circle",{cx:60,cy:60,r:26,style:"fill:var(--surface);stroke:var(--line);stroke-width:2"},cp);
+el("polygon",{points:"60,38 67,64 60,59 53,64",style:"fill:var(--ink)"},cp);
+var nt=el("text",{x:60,y:34,"text-anchor":"middle",style:"fill:var(--ink);font:700 12px sans-serif"},cp);nt.textContent="N";
+var tip=document.createElement("div");tip.className="tip";mb.appendChild(tip);
+function show(e,h){var b=mb.getBoundingClientRect();tip.innerHTML=h;tip.style.display="block";tip.style.left=Math.min(b.width-230,Math.max(0,e.clientX-b.left+12))+"px";tip.style.top=Math.max(0,e.clientY-b.top-72)+"px"}
+function hide(){tip.style.display="none"}
+function bind(n,f){n.setAttribute("tabindex","0");n.style.cursor="pointer";["mousemove","click"].forEach(function(t){n.addEventListener(t,function(e){show(e,f())})});n.addEventListener("mouseleave",hide);n.addEventListener("focus",function(){var q=n.getBoundingClientRect();show({clientX:q.left+q.width/2,clientY:q.top},f())});n.addEventListener("blur",hide)}
+lines.forEach(function(l,i){bind(l,function(){var v=(window.cur||[])[i]||0;return "<b>Tramo "+segs[i][0]+"</b><br>"+lab(v)+" · "+Math.round(42*(1-.7*v))+" km/h"})});
+var h1=el("circle",{cx:m1[0],cy:m1[1],r:20,fill:"transparent"},svg),h2=el("circle",{cx:m2[0],cy:m2[1],r:20,fill:"transparent"},svg);
+bind(h1,function(){return "<b>Accidente</b><br>Choque leve. Un carril bloqueado, despeje en unos 25 min."});
+bind(h2,function(){return "<b>Obra vial</b><br>Reparcheo con cierre parcial de carril hasta las 3:00 p. m."});
+mb.appendChild(svg);
+var hd=document.createElement("div");hd.className="mh";hd.innerHTML='<b>Mapa de tráfico · Carrera 33</b><span class="tag" style="background:var(--teal);color:var(--teal-ink)">Simulación</span>';mb.insertBefore(hd,svg);
+var hp=document.createElement("p");hp.className="note";hp.style.margin="0 0 8px";hp.textContent="Toca un tramo o un marcador para ver el detalle.";mb.insertBefore(hp,svg);
+function qs(s){return Array.prototype.slice.call(svg.querySelectorAll(s))}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var repsG=el("g",{},svg),sets={tr:lines.slice(),sens:qs('circle[r="6"]'),av:qs('circle[r="13"],rect[rx="3"],circle[r="20"]').concat(qs("text").filter(function(t){return t.textContent==="!"||t.textContent==="\u00d7"})),alt:[alt],rp:[repsG]};
+var ct=document.createElement("div");ct.className="ctl";
+ct.innerHTML='<label><input type="checkbox" data-k="tr" checked>Tráfico</label><label><input type="checkbox" data-k="sens" checked>Sensores</label><label><input type="checkbox" data-k="av" checked>Avisos</label><label><input type="checkbox" data-k="alt" checked>Ruta alterna</label><label><input type="checkbox" data-k="rp" checked>Reportes</label><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" data-z="in" aria-label="Acercar">+</button><button class="btn" data-z="out" aria-label="Alejar">−</button><button class="btn" data-z="0">Restablecer</button></span>';
+mb.insertBefore(ct,svg);
+ct.addEventListener("change",function(e){var k=e.target.getAttribute("data-k");if(k)sets[k].forEach(function(n){n.style.display=e.target.checked?"":"none"})});
+var vb=[0,0,800,480],dr=null,moved=0;
+function setVB(){vb[2]=Math.min(800,Math.max(200,vb[2]));vb[3]=vb[2]*.6;vb[0]=Math.min(800-vb[2],Math.max(0,vb[0]));vb[1]=Math.min(480-vb[3],Math.max(0,vb[1]));svg.setAttribute("viewBox",vb.join(" "));svg.style.touchAction=vb[2]<800?"none":"pan-y"}
+function zoom(f){var cx=vb[0]+vb[2]/2,cy=vb[1]+vb[3]/2;vb[2]/=f;vb[0]=cx-vb[2]/2;vb[1]=cy-vb[2]*.3;setVB()}
+ct.addEventListener("click",function(e){var z=e.target.getAttribute("data-z");if(!z)return;if(z==="in")zoom(1.5);else if(z==="out")zoom(1/1.5);else{vb=[0,0,800,480];setVB()}});
+svg.addEventListener("pointerdown",function(e){dr={x:e.clientX,y:e.clientY,vx:vb[0],vy:vb[1]};moved=0});
+svg.addEventListener("pointermove",function(e){if(!dr)return;var k=vb[2]/svg.getBoundingClientRect().width,dx=e.clientX-dr.x,dy=e.clientY-dr.y;moved=Math.max(moved,Math.abs(dx)+Math.abs(dy));if(moved>4){vb[0]=dr.vx-dx*k;vb[1]=dr.vy-dy*k;setVB()}});
+window.addEventListener("pointerup",function(){dr=null});
+svg.addEventListener("dblclick",function(){zoom(1.5)});
+setVB();
+alt.setAttribute("display","none");
+var rg=el("g",{},svg),AP=[[50,300],[160,245],[270,195],[390,145],[510,95],[620,50],[710,20]],BP=[[130,455],[240,400],[350,350],[470,300],[590,250],[700,205],[780,175]],ro=0,rh=6,sel="d",rbox=document.getElementById("routes");
+sets.alt=[rg];
+rbox.innerHTML='<h3>Planifica tu recorrido</h3><div class="fld2"><div><label class="l" for="ro">Desde</label><select id="ro"></select></div><div><label class="l" for="rh">Hasta</label><select id="rh"></select></div></div><div id="rcards"></div><ol id="rsteps"></ol>';
+var so=document.getElementById("ro"),sh=document.getElementById("rh");
+cl.forEach(function(c,i){so.add(new Option("Calle "+c,i));sh.add(new Option("Calle "+c,i))});sh.value=6;
+so.onchange=sh.onchange=function(){ro=+so.value;rh=+sh.value;render()};
+rbox.addEventListener("click",function(e){var b=e.target.closest(".rc");if(b){sel=b.getAttribute("data-k");render()}});
+function render(){var c=window.cur||[],lo=Math.min(ro,rh),hi=Math.max(ro,rh),n=hi-lo,av=0,td=0;
+for(var i=lo;i<hi;i++){var v=c[i]||0;td+=2.33*(1+1.7*v);av+=v}av=n?av/n:0;
+var R=[{k:"d",n:"Carrera 33 (directa)",t:td},{k:"a",n:"Alterna A · vía occidental",t:n*2.33*1.3*(1+.5*av)},{k:"b",n:"Alterna B · vía oriental",t:n*2.33*1.45*(1+.3*av)}],bt=Math.min(R[0].t,R[1].t,R[2].t);
+var rc=document.getElementById("rcards"),st=document.getElementById("rsteps");rg.innerHTML="";
+lines.forEach(function(l,i){var on=i>=lo&&i<hi;l.style.opacity=n&&!on?.3:1;l.style.strokeWidth=n&&on&&sel==="d"?15:12});
+if(!n){rc.innerHTML='<p class="note">Elige dos calles distintas.</p>';st.innerHTML="";return}
+rc.innerHTML=R.map(function(r){return '<button class="rc" data-k="'+r.k+'" aria-pressed="'+(sel===r.k)+'"><span><b>'+r.n+'</b><small>'+(r.t===bt?'<span class="best">Recomendada</span>':'+'+Math.round(r.t-bt)+' min frente a la mejor')+'</small></span><b>'+Math.round(r.t)+' min</b></button>'}).join("");
+var nm=function(i){return "Cl. "+cl[i]},a1=nm(ro),b1=nm(rh),acc=lo<=2&&hi>=3,obr=lo<=4&&hi>=5;
+var S={d:["Sal desde la "+a1+" por la Carrera 33.",acc?"Atención: accidente entre las Cl. 41 y 45, reduce la velocidad.":"Sigue de frente, sin desvíos.",obr?"Hay obra con cierre parcial entre las Cl. 50 y 54.":"Sin obras en tu trayecto.","Llegas a la "+b1+"."],a:["Desde la "+a1+" toma la vía paralela occidental.","Evitas los cruces más lentos de la Carrera 33.","Reincorpórate en la "+b1+"."],b:["Desde la "+a1+" gira hacia la vía paralela oriental.","Es más larga, pero con flujo más estable en hora pico.","Reincorpórate en la "+b1+"."]};
+st.innerHTML=S[sel].map(function(x){return "<li>"+x+"</li>"}).join("");
+[["a",AP,"var(--teal)",1],["b",BP,"#6b3fa0",2]].forEach(function(d){var on=sel===d[0],pl=el("polyline",{points:[P[lo]].concat(d[1].slice(lo,hi+1),[P[hi]]).join(" "),fill:"none",style:"stroke:"+d[2]+";stroke-linecap:round;stroke-linejoin:round;stroke-width:"+(on?9:4)+";opacity:"+(on?1:.6)+(on?"":";stroke-dasharray:10 8")},rg);
+bind(pl,function(){return "<b>"+R[d[3]].n+"</b><br>"+Math.round(R[d[3]].t)+" min · toca para elegirla"});pl.addEventListener("click",function(){sel=d[0];render()})});
+[[ro,"A"],[rh,"B"]].forEach(function(q){el("circle",{cx:P[q[0]][0],cy:P[q[0]][1],r:13,style:"fill:#12263a;stroke:#fff;stroke-width:2.5"},rg);var t=el("text",{x:P[q[0]][0],y:P[q[0]][1]+5,"text-anchor":"middle",style:"fill:#fff;font:800 13px sans-serif"},rg);t.textContent=q[1]})}
+window.onTraffic=render;render();
+var rep=false,draft=null,rbtn=document.getElementById("rp"),sbtn=document.getElementById("rs"),msg=document.getElementById("rm"),list=document.getElementById("rl");
+function pin(x,y){var g=el("g",{},repsG);el("circle",{cx:x,cy:y,r:11,style:"fill:#6b3fa0;stroke:#fff;stroke-width:2.5"},g);var t=el("text",{x:x,y:y+4,"text-anchor":"middle",style:"fill:#fff;font:800 11px sans-serif"},g);t.textContent="R";return g}
+function place(x,y){if(draft)draft.g.remove();draft={g:pin(x,y)};draft.g.style.opacity=.6;rep=false;svg.style.cursor="";sbtn.disabled=false;msg.textContent="Punto marcado. Describe el problema y envía el reporte.";document.getElementById("reportar").scrollIntoView({behavior:"smooth",block:"center"})}
+rbtn.addEventListener("click",function(){rep=true;svg.style.cursor="crosshair";msg.textContent="Toca el punto exacto en el mapa.";mb.scrollIntoView({behavior:"smooth",block:"center"})});
+document.getElementById("rc").addEventListener("click",function(){place(vb[0]+vb[2]/2,vb[1]+vb[3]/2)});
+svg.addEventListener("click",function(e){if(!rep||moved>4)return;var p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;var q=p.matrixTransform(svg.getScreenCTM().inverse());place(q.x,q.y)});
+sbtn.addEventListener("click",function(){if(!draft)return;var t=document.getElementById("rt").value,d=document.getElementById("rd").value.trim(),tm=new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+draft.g.style.opacity=1;bind(draft.g,function(){return "<b>Reporte ciudadano: "+esc(t)+"</b><br>"+esc(d||"Sin descripción")+"<br>Pendiente de verificación"});
+var li=document.createElement("li");li.innerHTML='<span class="tag" style="background:#6b3fa0">Pendiente</span><div><h3></h3><p></p></div>';li.querySelector("h3").textContent=t;li.querySelector("p").textContent=(d||"Sin descripción")+" · Enviado a las "+tm;
+var em=document.getElementById("re");if(em)em.remove();list.insertBefore(li,list.firstChild);
+draft=null;sbtn.disabled=true;document.getElementById("rd").value="";msg.textContent="Reporte enviado. Ya aparece en el mapa y queda pendiente de verificación."});
+var lg=document.createElement("div");lg.className="legend";lg.innerHTML='<span><i style="background:var(--surface);border:3px solid var(--teal);border-radius:50%"></i>Sensor IoT</span><span><i style="background:var(--bad);border-radius:50%"></i>Accidente</span><span><i style="background:#8a5a00"></i>Obra vial</span><span><i style="background:var(--teal)"></i>Ruta alterna</span><span>Esquema ilustrativo, no está a escala.</span>';mb.appendChild(lg)})();
+var r=document.getElementById("h");var nw=new Date(),hh=nw.getHours()+(nw.getMinutes()>=30?.5:0);r.value=Math.min(22,Math.max(5,hh));
+function upd(){var h=parseFloat(r.value),b=base(h),tot=0;
+document.getElementById("hlabel").textContent=fmt(h);
+segs.forEach(function(s,i){var v=Math.min(1,b*s[1]),bar=rows[i].querySelector("i");tot+=v;lines[i].style.stroke=col(v);window.cur=window.cur||[];cur[i]=v;
+bar.style.width=Math.max(8,v*100)+"%";bar.style.background=col(v);rows[i].lastChild.textContent=lab(v)});
+var a=tot/segs.length,eta=Math.round(14*(1+1.7*a)),st=document.getElementById("state");
+document.getElementById("spd").textContent=Math.round(42*(1-.7*a))+" km/h";st.textContent=lab(a);st.style.background=col(a);st.style.color="#fff";
+document.getElementById("eta").textContent=eta+" min";if(window.onTraffic)onTraffic();
+var rt=document.getElementById("route");
+rt.innerHTML=a>=.5?"<strong>Ruta alterna sugerida.</strong> Evita la Carrera 33 en este horario y usa una vía paralela: puedes ahorrar unos "+Math.round((eta-14)*.4)+" min.":a>=.3?"<strong>Salida recomendable.</strong> Hay algo de lentitud. Si puedes, sal 30 minutos antes o después.":"<strong>Vía despejada.</strong> Buen momento para circular por la Carrera 33."}
+r.addEventListener("input",upd);upd();
+})();
+</script>
+</body>
+</html>
